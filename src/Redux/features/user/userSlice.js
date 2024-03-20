@@ -7,6 +7,7 @@ const initialState = {
 }
 
 export const userLogin = createAsyncThunk("user/login", async (userCredentials) => {
+    debugger
     const response = await axios.post("/auth/login", userCredentials);
     sessionStorage.setItem('token', response.data.token);
     return response.data;
@@ -27,6 +28,9 @@ const userSlice = createSlice({ // createSlice will automatically create action 
         },
         clearUser : (state) => {
             state.currentUser = {}
+        },
+        setUser : (state, action) => {
+            state.currentUser = action.payload
         }
        
     },
@@ -53,5 +57,6 @@ export const {
     // loggedIn, 
     // loggedOut,
     clearError,
-    clearUser
+    clearUser,
+    setUser
 } = userSlice.actions

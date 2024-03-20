@@ -11,6 +11,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { clearUser } from '../../Redux/features/user/userSlice';
 const UserList = () => {
     const [rows, setRows] = useState([]);
+    const [totalRows, setTotalRows] = useState(0);
+    const [paginationModel, setPaginationModel] = React.useState({
+        page: 0,
+        pageSize: 7,
+    });
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const user = useSelector((state) => state.user);
@@ -60,12 +66,16 @@ const UserList = () => {
         },
     ];
     const getUserData = async () => {
+        debugger
+        setLoading(true);
         try {
-            const userData = await axios.get("/api/user");
+            const userData = await axios.get(`/api/user?pageNumber=${paginationModel.page + 1}&pageSize=${paginationModel.pageSize}`);
             console.log(userData.data)
             setRows(userData.data);
+            setTotalRows(JSON.parse(userData.headers.get('X-Pagination')).TotalItemCount);
+            setLoading(false);
         } catch (error) {
-
+            setLoading(false);
         }
     }
     const handleLogout = () => {
@@ -73,9 +83,14 @@ const UserList = () => {
         dispatch(clearUser());
         navigate("/")
     }
+    const handlePageChange = (value) => {
+        debugger
+        setPaginationModel({ page: value.page, pageSize: value.pageSize });
+        // getUserData();
+    }
     useEffect(() => {
         getUserData();
-    }, [])
+    }, [paginationModel.page, paginationModel.pageSize])
     return (
         <>
             <Card sx={{ m: 1, textAlign: 'left' }} >
@@ -95,16 +110,12 @@ const UserList = () => {
                 <DataGrid
                     rows={rows}
                     columns={columns}
-                    initialState={{
-                        pagination: {
-                            paginationModel: {
-                                pageSize: 5,
-                            },
-                        },
-                    }}
+                    rowCount={totalRows}
+                    loading={loading}
                     pageSizeOptions={[5]}
-                    checkboxSelection
-                    disableRowSelectionOnClick
+                    paginationModel={paginationModel}
+                    paginationMode="server"
+                    onPaginationModelChange={handlePageChange}
                 />
             </Card>
         </>
